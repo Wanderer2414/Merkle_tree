@@ -55,13 +55,29 @@ public:
         n_leaves = data.size();
         m_root = inode.front();
     }
-    std::string Merkle_proof(Node* root, const int& n, const Data& data, const int& remain) {
-        if (!n) return hash(data.index);
-        int half = pow(2, std::floor(std::log2(n)));
-        std::string proof;
-        if (data.index >= remain + half) proof =  root->left->val + Merkle_proof(root->right, n - half, data, remain+half);
-        proof = root->right->val + Merkle_proof(root->left, half-1, data, remain);
-        return hash(proof);
+    std::stack<std::pair<bool, std::string>> Merkle_proof(const Data& data) {
+        std::stack<bool> path;
+        int n = data.index;
+        while (n) {
+            path.push(n%2);
+            n/=2;
+        }
+        std::stack<std::pair<bool,std::string>> ans;
+        Node* cur = m_root;
+        ans.push({true, cur->val});
+        while (path.size()) {
+            if (path.top()) {
+                ans.push({true, cur->left->val});
+                cur = cur->right;
+            }
+            else {
+                if (cur->right) ans.push({false, cur->right->val});
+                else ans.push({false, cur->left->val});
+                cur = cur->left;
+            }
+            path.pop();
+        }
+        return ans;
     }
     void insert(Data& data) {
         if (float log = log2(n_leaves); log==std::floor(log))
@@ -112,7 +128,15 @@ public:
         tmp = 0;
     }
     bool contains(Data& data) {
-        std::cout << Merkle_proof(m_root, n_leaves, data, 0);
+        auto path = Merkle_proof(data);
+        std::string str = hash(data.value);
+        while (path.size()>1) {
+            auto i = path.top();
+            if (path.top().first) str = hash(path.top().second + str);
+            else str = hash(str + path.top().second);
+            path.pop();
+        }
+        return str == path.top().second;
     }
     ~MerkleTree() {
         deleteWhole(m_root);
