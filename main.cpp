@@ -58,7 +58,8 @@ public:
     std::stack<std::pair<bool, std::string>> Merkle_proof(const Data& data) {
         std::stack<bool> path;
         int n = data.index;
-        while (n) {
+        int level = std::ceil(std::log2(n_leaves));
+        for (int i = 0; i<level; i++) {
             path.push(n%2);
             n/=2;
         }
@@ -157,7 +158,7 @@ int main() {
     std::cout << "Insert" << 55 << std::endl;
     tree.insert(ins55);
     tree.show();
-    if (tree.contains(ins55)) std::cout << "55 is available!" << std::endl;
-    else std::cout << "55 does not available!" << std::endl;
+    if (tree.contains(ins55)) std::cout << "100 is available!" << std::endl;
+    else std::cout << "100 does not available!" << std::endl;
     return 0;
 }
